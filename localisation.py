@@ -65,7 +65,7 @@ while True:
         cv2.circle(frame, (x2, y2), 5, (0, 255, 0), -1)
         cv2.drawContours(frame, [marker1, marker2], -1, (0, 0, 255), 2)
 
-    	# TODO: write to file the xavg and both y coords, also draw lines
+    	# draw lines on frame to show range of motion
         xavg = int((x1 + x2)/2)
         cv2.line(frame, (xavg, y1), (xavg, y2), (0, 255, 0), 1)
         cv2.line(frame, (0, y1), (640, y1), (0, 255, 0), 1)
@@ -77,6 +77,12 @@ while True:
     k = cv2.waitKey(5) & 0xFF
     if k == ord("q"):
         break
+
+save = input("Save (y/n) ? ")
+k = cv2.waitKey(10000) & 0xFF
+if save == 'y':
+    with open('calibration_values.txt', 'w') as calib_file:
+        calib_file.write(str(xavg) + "," + str(y1) + "," + str(y2) + '\n')
 
 vs.stop()
 cv2.destroyAllWindows()
