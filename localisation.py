@@ -65,11 +65,11 @@ while True:
         cv2.circle(frame, (x2, y2), 5, (0, 255, 0), -1)
         cv2.drawContours(frame, [marker1, marker2], -1, (0, 0, 255), 2)
 
-    # TODO: write to file the xavg and both y coords, also draw lines
-    xavg = int((x1 + x2)/2)
-    cv2.line(frame, (xavg, y1), (xavg, y2), (0, 255, 0), 1)
-    cv2.line(frame, (0, y1), (640, y1), (0, 255, 0), 1)
-    cv2.line(frame, (0, y2), (640, y2), (0, 255, 0), 1)
+    	# TODO: write to file the xavg and both y coords, also draw lines
+        xavg = int((x1 + x2)/2)
+        cv2.line(frame, (xavg, y1), (xavg, y2), (0, 255, 0), 1)
+        cv2.line(frame, (0, y1), (640, y1), (0, 255, 0), 1)
+        cv2.line(frame, (0, y2), (640, y2), (0, 255, 0), 1)
 
     cv2.imshow('frame', frame)
     cv2.imshow('mask', mask)
