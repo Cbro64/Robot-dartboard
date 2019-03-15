@@ -78,11 +78,12 @@ while True:
     if k == ord("q"):
         break
 
-save = input("Save (y/n) ? ")
-k = cv2.waitKey(10000) & 0xFF
-if save == 'y':
-    with open('calibration_values.txt', 'w') as calib_file:
-        calib_file.write(str(xavg) + "," + str(y1) + "," + str(y2) + '\n')
+if xavg is not None:
+    save = input("Save (y/n) ? ")
+    k = cv2.waitKey(10000) & 0xFF
+    if save == 'y':
+        with open('calibration_values.txt', 'w') as calib_file:
+            calib_file.write(str(xavg) + "," + str(y1) + "," + str(y2) + '\n')
 
 vs.stop()
 cv2.destroyAllWindows()
