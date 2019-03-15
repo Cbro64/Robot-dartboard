@@ -24,7 +24,9 @@ ignore = 10 # ignore first number of frames while camera warms up
 pathx = []
 pathy = []
 # open serial port
-ser = serial.Serial('/dev/ttyACM0',9600)
+#ser = serial.Serial('/dev/ttyACM0',9600)
+
+
 
 # Video capture parameters
 (w,h) = (640,480)
@@ -32,6 +34,16 @@ bytesPerFrame = w * h
 fps = 35 # setting to 250 will request the maximum framerate possible
 # image processing will slow down the pipeline, so the requested FPS should be set just below the pipeline speed
 motionThreshold = motionThreshold * w * h * 255 / 100 # convert from percent to pixel value sum
+
+# read calibration values from text file or use default
+xPlane = 0
+y1 = 0
+y2 = h
+with open('calibration_values.txt', 'r') as calib_file:
+    params = calib_file.read().split(',')
+    xPlane = params[0]
+    y1 = params[1]
+    y2 = params[2]
 
 # "raspividyuv" is the command that provides camera frames in YUV format
 #  "--output -" specifies stdout as the output
@@ -95,10 +107,11 @@ while True:
   
         path = np.polyfit(pathx, pathy, 1) # fit line to coords
         p = np.poly1d(path)
-        targetY = int(p(0)); # get y-value prediction
-        cv2.circle(frame, (0, targetY), 4, (255,255,255))
+        targetY = int(p(xPlane)); # get y-value prediction at x plane
+        cv2.circle(frame, (xPlane, targetY), 4, (255,255,255))
         
         # send prediction to arduino
+        # remember to end write messages with \r\n
         if frameCount == 3:
             if targetY > 240:
                 ser.write(b'r\r\n')
