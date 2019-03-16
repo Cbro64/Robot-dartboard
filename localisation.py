@@ -14,9 +14,9 @@ vs = PiVideoStream().start()
 time.sleep(1) # allow camera to warm up
 
 # define range of red color in HSV
-lower1 = np.array([0, 100, 10])
+lower1 = np.array([0, 50, 5])
 upper1 = np.array([5, 255, 255])
-lower2 = np.array([170, 100, 10])
+lower2 = np.array([170, 50, 5])
 upper2 = np.array([180, 255, 255])
 
 # loop over the frames of the video

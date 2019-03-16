@@ -19,12 +19,13 @@ maxFrames = 50
 frameCount = 0
 lastFrame = None
 dartThrown = False
+sendRangeMax = 255;
 motionThreshold = 0.2 # percentage of the frame
 ignore = 10 # ignore first number of frames while camera warms up
 pathx = []
 pathy = []
 # open serial port
-#ser = serial.Serial('/dev/ttyACM0',9600)
+ser = serial.Serial('/dev/ttyACM0',9600)
 
 
 
@@ -41,10 +42,17 @@ y1 = 0
 y2 = h
 with open('calibration_values.txt', 'r') as calib_file:
     params = calib_file.read().split(',')
-    xPlane = params[0]
-    y1 = params[1]
-    y2 = params[2]
+    xPlane = int(params[0])
+    y1 = int(params[1])
+    y2 = int(params[2])
 
+if(y1 > y2):
+    temp = y2
+    y2 = y1
+    y1 = temp
+print(y1)
+print(y2)
+print(xPlane)
 # "raspividyuv" is the command that provides camera frames in YUV format
 #  "--output -" specifies stdout as the output
 #  "--timeout 0" specifies continuous video
@@ -54,7 +62,7 @@ videoCmd = "raspividyuv -w "+str(w)+" -h "+str(h)+" --output - --timeout 0 --fra
 videoCmd = videoCmd.split() # Popen requires that each parameter is a separate string
 cameraProcess = sp.Popen(videoCmd, stdout=sp.PIPE, bufsize=0) # start the camera
 atexit.register(cameraProcess.terminate) # this closes the camera process in case the python scripts exits unexpectedly
-cv2.waitKey(2000) # wait for camera to warm up
+cv2.waitKey(10000) # wait for camera to warm up
 
 print("Ready to throw!")
 #start_time = time.time() # timing is temporarily removed
@@ -78,7 +86,7 @@ while True:
         lastFrame = frame
 
     frameDiff = cv2.absdiff(lastFrame, frame)
-    thresh = cv2.threshold(frameDiff, 7, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.threshold(frameDiff, 10, 255, cv2.THRESH_BINARY)[1]
     
     if not dartThrown:
         motion = np.sum(thresh)
@@ -112,13 +120,17 @@ while True:
         
         # send prediction to arduino
         # remember to end write messages with \r\n
-        if frameCount == 3:
-            if targetY > 240:
-                ser.write(b'r\r\n')
-                print("RIGHT")
+        print(targetY)
+        if frameCount == 6:
+            if targetY < y1:
+                sendY = 0
+            elif targetY > y2:
+                sendY = sendRangeMax
             else:
-                ser.write(b'l\r\n')
-                print("LEFT")
+                sendY = int(float((targetY - y1)) / float((y2 - y1)) * sendRangeMax)
+            print("Sending: " + str(sendY));
+            ser.write(str.encode(str(sendY)) + b'\r\n')
+
 
         frames.append(frame) # save the frame
         threshFrames.append(thresh)
@@ -148,13 +160,15 @@ if save:
 
 display = 1
 if display & (len(frames) > 0):
+    key = "f" 
     print("Displaying frames")
     cv2.waitKey(2000)
-    for i in range(len(frames)):
-        cv2.imshow("frames", frames[i])
-        cv2.imshow("thresh", threshFrames[i])
-        key = cv2.waitKey(0) & 0xFF # time between frames in ms (0 = keypress only)
-        if key == ord("q"):
-            break
+    while(key != ord("q")):
+        for i in range(len(frames)):
+            cv2.imshow("frames", frames[i])
+            cv2.imshow("thresh", threshFrames[i])
+            key = cv2.waitKey(0) & 0xFF # time between frames in ms (0 = keypress only)
+            if key == ord("q"):
+                break
 
 cv2.destroyAllWindows()
