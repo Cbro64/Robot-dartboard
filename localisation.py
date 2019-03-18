@@ -14,9 +14,9 @@ vs = PiVideoStream().start()
 time.sleep(1) # allow camera to warm up
 
 # define range of red color in HSV
-lower1 = np.array([0, 50, 5])
+lower1 = np.array([0, 100, 30])
 upper1 = np.array([5, 255, 255])
-lower2 = np.array([170, 50, 5])
+lower2 = np.array([175, 100, 30])
 upper2 = np.array([180, 255, 255])
 
 # loop over the frames of the video
@@ -25,7 +25,7 @@ while True:
     frame = vs.read()
     # convert to HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    hsv = cv2.GaussianBlur(hsv, (5, 5), 0)
+    #hsv = cv2.GaussianBlur(hsv, (5, 5), 0)
 
     # make threshold mask
     mask = cv2.inRange(hsv, lower1, upper1) + cv2.inRange(hsv, lower2, upper2)
@@ -80,7 +80,6 @@ while True:
 
 if xavg is not None:
     save = input("Save (y/n) ? ")
-    k = cv2.waitKey(10000) & 0xFF
     if save == 'y':
         with open('calibration_values.txt', 'w') as calib_file:
             calib_file.write(str(xavg) + "," + str(y1) + "," + str(y2) + '\n')

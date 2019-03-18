@@ -111,24 +111,27 @@ while True:
             cy = int(M['m01']/M['m00'])
             pathx.append(cx) # save tracking coords
             pathy.append(cy)
-            cv2.circle(thresh, (cx, cy), 4, (0,0,255))
+            #cv2.circle(thresh, (cx, cy), 4, (0,0,255))
   
-        path = np.polyfit(pathx, pathy, 1) # fit line to coords
+        
+        path = np.polyfit(pathx, pathy, 2) # fit line to coords
         p = np.poly1d(path)
         targetY = int(p(xPlane)); # get y-value prediction at x plane
         cv2.circle(frame, (xPlane, targetY), 4, (255,255,255))
         
         # send prediction to arduino
         # remember to end write messages with \r\n
-        print(targetY)
-        if frameCount == 6:
+        #print(targetY)
+        if frameCount == 5:
+            cv2.circle(frame, (xPlane, targetY), 4, (255,255,255))
             if targetY < y1:
                 sendY = 0
             elif targetY > y2:
                 sendY = sendRangeMax
             else:
                 sendY = int(float((targetY - y1)) / float((y2 - y1)) * sendRangeMax)
-            print("Sending: " + str(sendY));
+            #print("Sending: " + str(sendY));
+            print("Prediction sent on frame: " +str(frameCount))
             ser.write(str.encode(str(sendY)) + b'\r\n')
 
 
@@ -160,11 +163,12 @@ if save:
 
 display = 1
 if display & (len(frames) > 0):
-    key = "f" 
+    key = "f"
     print("Displaying frames")
     cv2.waitKey(2000)
     while(key != ord("q")):
         for i in range(len(frames)):
+            print("Showing frame number: " + str(i+1))
             cv2.imshow("frames", frames[i])
             cv2.imshow("thresh", threshFrames[i])
             key = cv2.waitKey(0) & 0xFF # time between frames in ms (0 = keypress only)
