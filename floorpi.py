@@ -50,6 +50,8 @@ range2 = y2-y1
 y1 += range2*0.1
 y2 -= range2*0.1
 
+stop = False
+
 print(y1)
 print(y2)
 print(xPlane)
@@ -68,6 +70,7 @@ throwNumber = 0
 #start_time = time.time() # timing is temporarily removed
 while True:
     throwNumber+=1
+    
     cv2.waitKey(3000)
     print("Ready to throw!")
     frames = [] # stores the frames for later review
@@ -154,7 +157,6 @@ while True:
         lastFrame = frame
 
 
-
     #end_time = time.time()
     #elapsed_seconds = end_time-start_time
 
@@ -166,7 +168,7 @@ while True:
         print("Writing frames to disk...")
     #    out = cv2.VideoWriter("slow_motion.avi", cv2.VideoWriter_fourcc(*"MJPG"), 30, (w,h))
         os.mkdir(str(throwNumber))
-        for n in range(N_frames):
+        for n in range(maxFrames):
             cv2.imwrite(str(throwNumber) + "/frame"+str(n)+".png", frames[n]) # save frame as a PNG image
      #       frame_rgb = cv2.cvtColor(frames[n],cv2.COLOR_GRAY2RGB) # video codec requires RGB image
      #       out.write(frame_rgb)
@@ -177,14 +179,21 @@ while True:
         key = "f"
         print("Displaying frames")
         cv2.waitKey(2000)
-        while(key != ord("q")):
+        while(key != ord("q") and key != ord("n")):
             for i in range(len(frames)):
                 print("Showing frame number: " + str(i+1))
                 cv2.imshow("frames", frames[i])
                 cv2.imshow("thresh", threshFrames[i])
                 key = cv2.waitKey(0) & 0xFF # time between frames in ms (0 = keypress only)
-                if key == ord("q"):
+                if key == ord("n"):
                     break
+                if key == ord("q"):
+                    stop = True
+                    break
+    if stop:
+        break
+    print("Next throw")
+    ser.write(str.encode(str(sendRangeMax/2)) + b'\r\n')
                 
 cameraProcess.terminate() # stop the camera
 cv2.destroyAllWindows()
