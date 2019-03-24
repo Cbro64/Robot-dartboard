@@ -15,12 +15,12 @@ import serial
 
 frames = [] # stores the frames for later review
 threshFrames = []
-maxFrames = 50
+maxFrames = 30
 frameCount = 0
 lastFrame = None
 dartThrown = False
 sendRangeMax = 255;
-motionThreshold = 0.2 # percentage of the frame
+motionThreshold = 0.15 # percentage of the frame
 ignore = 10 # ignore first number of frames while camera warms up
 pathx = []
 pathy = []
@@ -50,6 +50,10 @@ if(y1 > y2):
     temp = y2
     y2 = y1
     y1 = temp
+range2 = y2-y1
+y1 += range2*0.1
+y2 -= range2*0.1
+
 print(y1)
 print(y2)
 print(xPlane)
@@ -62,7 +66,7 @@ videoCmd = "raspividyuv -w "+str(w)+" -h "+str(h)+" --output - --timeout 0 --fra
 videoCmd = videoCmd.split() # Popen requires that each parameter is a separate string
 cameraProcess = sp.Popen(videoCmd, stdout=sp.PIPE, bufsize=0) # start the camera
 atexit.register(cameraProcess.terminate) # this closes the camera process in case the python scripts exits unexpectedly
-cv2.waitKey(10000) # wait for camera to warm up
+cv2.waitKey(6000) # wait for camera to warm up
 
 print("Ready to throw!")
 #start_time = time.time() # timing is temporarily removed
@@ -114,7 +118,7 @@ while True:
             #cv2.circle(thresh, (cx, cy), 4, (0,0,255))
   
         
-        path = np.polyfit(pathx, pathy, 2) # fit line to coords
+        path = np.polyfit(pathx, pathy, 1) # fit line to coords
         p = np.poly1d(path)
         targetY = int(p(xPlane)); # get y-value prediction at x plane
         cv2.circle(frame, (xPlane, targetY), 4, (255,255,255))
@@ -122,7 +126,7 @@ while True:
         # send prediction to arduino
         # remember to end write messages with \r\n
         #print(targetY)
-        if frameCount == 5:
+        if frameCount >= 3:
             cv2.circle(frame, (xPlane, targetY), 4, (255,255,255))
             if targetY < y1:
                 sendY = 0
@@ -131,7 +135,7 @@ while True:
             else:
                 sendY = int(float((targetY - y1)) / float((y2 - y1)) * sendRangeMax)
             #print("Sending: " + str(sendY));
-            print("Prediction sent on frame: " +str(frameCount))
+            #print("Prediction sent on frame: " +str(frameCount))
             ser.write(str.encode(str(sendY)) + b'\r\n')
 
 
