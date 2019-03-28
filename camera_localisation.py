@@ -11,13 +11,20 @@ import cv2
 import numpy as np
 
 clicks = []
+mx = 0
+my = 0
 
 #this function will be called whenever the mouse is left-clicked
 def mouse_callback(event, x, y, flags, params):
-    if event == 1 and len(clicks) < 2: # left click
+    global x
+    global y
+    if event == cv2.EVENT_LBUTTONDOWN and len(clicks) < 2: # left click
         #store the coordinates of the click event
         clicks.append([x, y])
         print(clicks)
+    if event == cv2.MOUSE_MOVE:
+        mx = x
+        my = y
 
 vs = PiVideoStream().start()
 time.sleep(1) # allow camera to warm up
@@ -28,12 +35,12 @@ time.sleep(1) # allow camera to warm up
 while True:
     # grab the current frame
     frame = vs.read()
-    # get mouse location
+
     if len(clicks) == 1:
         [x1 y1] = clicks[0]
-        xavg = int((x1 + x)/2)
-        cv2.line(frame, (xavg, y1), (xavg, y), (0, 0, 255), 1) # vertical line
-        cv2.line(frame, (0, y), (640, y), (255, 0, 0), 1) # current horizontal line
+        xavg = int((x1 + mx)/2)
+        cv2.line(frame, (xavg, y1), (xavg, my), (0, 0, 255), 1) # vertical line
+        cv2.line(frame, (0, my), (640, my), (255, 0, 0), 1) # current horizontal line
         cv2.circle(frame, (x1, y1), 5, (0, 255, 0), -1) # previous click dot
         cv2.line(frame, (0, y1), (640, y1), (0, 255, 0), 1) # previous click line
     else if len(clicks) == 2:
