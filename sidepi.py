@@ -21,7 +21,7 @@ motionThreshold = 0.05 # percentage of the frame
 ignore = 10 # ignore first number of frames while camera warms up
 
 # open serial port
-ser = serial.Serial('/dev/ttyACM0',9600)
+#ser = serial.Serial('/dev/ttyACM0',9600)
 
 
 
@@ -129,7 +129,7 @@ while True:
                 #cv2.circle(thresh, (cx, cy), 4, (0,0,255))
 
 
-            path = np.polyfit(pathx, pathy, 1) # fit line to coords
+            path = np.polyfit(pathx, pathy, 2) # fit line to coords
             p = np.poly1d(path)
             targetY = int(p(xPlane)); # get y-value prediction at x plane
             cv2.circle(frame, (xPlane, targetY), 4, (255,255,255))
@@ -147,7 +147,7 @@ while True:
                     sendY = int(float((targetY - y1)) / float((y2 - y1)) * sendRangeMax)
                 #print("Sending: " + str(sendY));
                 #print("Prediction sent on frame: " +str(frameCount))
-                ser.write(str.encode(str(sendY)) + b'\r\n')
+                #ser.write(str.encode(str(sendY)) + b'\r\n')
 
 
             frames.append(frame) # save the frame
@@ -195,7 +195,7 @@ while True:
     if stop:
         break
     print("Next throw")
-    ser.write(str.encode(str(sendRangeMax/2)) + b'\r\n')
+    #ser.write(str.encode(str(sendRangeMax/2)) + b'\r\n')
                 
 cameraProcess.terminate() # stop the camera
 cv2.destroyAllWindows()
