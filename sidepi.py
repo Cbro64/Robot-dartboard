@@ -18,7 +18,6 @@ maxFrames = 25
 
 sendRangeMax = 255;
 motionThreshold = 0.05 # percentage of the frame
-ignore = 10 # ignore first number of frames while camera warms up
 
 # open serial port
 #ser = serial.Serial('/dev/ttyACM0',9600)
@@ -41,6 +40,7 @@ with open('calibration_values.txt', 'r') as calib_file:
     xPlane = int(params[0])
     y1 = int(params[1])
     y2 = int(params[2])
+    xCutoff = int(params[3])
 
 if(y1 > y2):
     temp = y2
@@ -102,7 +102,8 @@ while True:
 
         frameDiff = cv2.absdiff(lastFrame, frame)
         thresh = cv2.threshold(frameDiff, 10, 255, cv2.THRESH_BINARY)[1]
-
+        thresh[:,xCutoff:w] = 0 # assumes target is on right hand side of frame
+        
         if not dartThrown:
             motion = np.sum(thresh)
             #print(motion/255/(w*h)*100)
@@ -145,7 +146,7 @@ while True:
                     sendY = sendRangeMax
                 else:
                     sendY = int(float((targetY - y1)) / float((y2 - y1)) * sendRangeMax)
-                #print("Sending: " + str(sendY));
+                print("Sending: " + str(sendY));
                 #print("Prediction sent on frame: " +str(frameCount))
                 #ser.write(str.encode(str(sendY)) + b'\r\n')
 
@@ -195,7 +196,7 @@ while True:
     if stop:
         break
     print("Next throw")
-    #ser.write(str.encode(str(sendRangeMax/2)) + b'\r\n')
+    ser.write(str.encode(str(sendRangeMax/2)) + b'\r\n')
                 
 cameraProcess.terminate() # stop the camera
 cv2.destroyAllWindows()
