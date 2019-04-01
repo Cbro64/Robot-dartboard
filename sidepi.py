@@ -196,7 +196,7 @@ while True:
     if stop:
         break
     print("Next throw")
-    ser.write(str.encode(str(sendRangeMax/2)) + b'\r\n')
+    #ser.write(str.encode(str(sendRangeMax/2)) + b'\r\n')
                 
 cameraProcess.terminate() # stop the camera
 cv2.destroyAllWindows()
