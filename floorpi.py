@@ -17,7 +17,7 @@ import os
 maxFrames = 25
 
 sendRangeMax = 255;
-motionThreshold = 0.15 # percentage of the frame
+motionThreshold = 0.05 # percentage of the frame
 ignore = 10 # ignore first number of frames while camera warms up
 
 # open serial port
@@ -70,9 +70,9 @@ throwNumber = 0
 #start_time = time.time() # timing is temporarily removed
 while True:
     throwNumber+=1
+    cameraProcess.stdout.flush()
     
-    cv2.waitKey(3000)
-    print("Ready to throw!")
+   
     frames = [] # stores the frames for later review
     threshFrames = []
     frameCount = 0
@@ -80,7 +80,9 @@ while True:
     dartThrown = False
     pathx = []
     pathy = []
-
+    ignore = 10;
+    cv2.waitKey(3000)
+    print("Ready to throw!")
     # Capture loop
     while True:
         cameraProcess.stdout.flush() # discard any frames that we were not able to process in time
@@ -163,7 +165,7 @@ while True:
     #print("Done! Result: "+str(frameCount/elapsed_seconds)+" fps")
     print("Throw captured")
 
-    save = 1
+    save = 0
     if save:
         print("Writing frames to disk...")
     #    out = cv2.VideoWriter("slow_motion.avi", cv2.VideoWriter_fourcc(*"MJPG"), 30, (w,h))
