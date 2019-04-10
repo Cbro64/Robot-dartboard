@@ -14,13 +14,13 @@ import atexit
 import serial
 import os
 
-maxFrames = 25
+maxFrames = 20
 
 sendRangeMax = 255;
 motionThreshold = 0.05 # percentage of the frame
 
 # open serial port
-#ser = serial.Serial('/dev/ttyACM0',9600)
+ser = serial.Serial('/dev/ttyS0',9600)
 
 
 
@@ -64,7 +64,7 @@ videoCmd = "raspividyuv -w "+str(w)+" -h "+str(h)+" --output - --timeout 0 --fra
 videoCmd = videoCmd.split() # Popen requires that each parameter is a separate string
 cameraProcess = sp.Popen(videoCmd, stdout=sp.PIPE, bufsize=0) # start the camera
 atexit.register(cameraProcess.terminate) # this closes the camera process in case the python scripts exits unexpectedly
-cv2.waitKey(6000) # wait for camera to warm up
+cv2.waitKey(1000) # wait for camera to warm up
 
 throwNumber = 0
 #start_time = time.time() # timing is temporarily removed
@@ -72,7 +72,6 @@ while True:
     throwNumber+=1
     cameraProcess.stdout.flush()
     
-   
     frames = [] # stores the frames for later review
     threshFrames = []
     frameCount = 0
@@ -103,9 +102,10 @@ while True:
         frameDiff = cv2.absdiff(lastFrame, frame)
         thresh = cv2.threshold(frameDiff, 10, 255, cv2.THRESH_BINARY)[1]
         thresh[:,xCutoff:w] = 0 # assumes target is on right hand side of frame
+        motion = np.sum(thresh)
+        lastFrame = frame
         
         if not dartThrown:
-            motion = np.sum(thresh)
             #print(motion/255/(w*h)*100)
             if motion > motionThreshold:
                 dartThrown = True
@@ -114,12 +114,16 @@ while True:
                 # exit if 'q' key is pressed
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord("q"):
+                    stop = true
                     break
-
-        # dart throw started
         if dartThrown:
+            frames.append(frame) # save the frame
+            threshFrames.append(thresh)
             frameCount += 1
-
+        
+        # dart throw started
+        if dartThrown and motion>motionThreshold:
+            
             # Calculate center of motion 
             M = cv2.moments(thresh)
             if M['m00']:
@@ -130,36 +134,34 @@ while True:
                 #cv2.circle(thresh, (cx, cy), 4, (0,0,255))
 
 
-            path = np.polyfit(pathx, pathy, 2) # fit line to coords
+            path = np.polyfit(pathx, pathy, 2) # fit quad to coords
             p = np.poly1d(path)
             targetY = int(p(xPlane)); # get y-value prediction at x plane
             cv2.circle(frame, (xPlane, targetY), 4, (255,255,255))
 
             # send prediction to arduino
-            # remember to end write messages with \r\n
             #print(targetY)
             if frameCount >= 3:
                 cv2.circle(frame, (xPlane, targetY), 4, (255,255,255))
                 if targetY < y1:
-                    sendY = 0
-                elif targetY > y2:
                     sendY = sendRangeMax
+                elif targetY > y2:
+                    sendY = 0
                 else:
-                    sendY = int(float((targetY - y1)) / float((y2 - y1)) * sendRangeMax)
+                    sendY = sendRangeMax - int(float((targetY - y1)) / float((y2 - y1)) * sendRangeMax)
                 print("Sending: " + str(sendY));
                 #print("Prediction sent on frame: " +str(frameCount))
-                #ser.write(str.encode(str(sendY)) + b'\r\n')
+                ser.write(sendY.to_bytes(1, 'little'))
 
 
-            frames.append(frame) # save the frame
-            threshFrames.append(thresh)
+            #frames.append(frame) # save the frame
+            #threshFrames.append(thresh)
 
             if frameCount > maxFrames:
                 break
-
-        lastFrame = frame
-
-
+    
+    if stop:
+        break
     #end_time = time.time()
     #elapsed_seconds = end_time-start_time
 
@@ -196,7 +198,8 @@ while True:
     if stop:
         break
     print("Next throw")
-    #ser.write(str.encode(str(sendRangeMax/2)) + b'\r\n')
+    sendY = int(sendRangeMax/2)
+    ser.write(sendY.to_bytes(1, 'little'))
                 
 cameraProcess.terminate() # stop the camera
 cv2.destroyAllWindows()
