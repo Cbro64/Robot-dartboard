@@ -157,8 +157,8 @@ while True:
             #frames.append(frame) # save the frame
             #threshFrames.append(thresh)
 
-            if frameCount > maxFrames:
-                break
+        if frameCount > maxFrames:
+            break
     
     if stop:
         break
