@@ -80,7 +80,7 @@ while True:
     pathx = []
     pathy = []
     ignore = 10;
-    cv2.waitKey(3000)
+    cv2.waitKey(2000)
     print("Ready to throw!")
     # Capture loop
     while True:
@@ -157,8 +157,8 @@ while True:
             #frames.append(frame) # save the frame
             #threshFrames.append(thresh)
 
-            if frameCount > maxFrames:
-                break
+        if frameCount > maxFrames:
+            break
     
     if stop:
         break
