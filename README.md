@@ -1,4 +1,4 @@
-# Robotic Dartboard
+# Ball Catching Robot
 Final year mechatronics engineering project
 
 Semester 1 2019
