@@ -14,7 +14,7 @@ clicks = []
 mx = 0
 my = 0
 
-#this function will be called whenever the mouse is left-clicked
+# This function will be called whenever the mouse is left-clicked
 def mouse_callback(event, x, y, flags, params):
     global mx
     global my
@@ -35,20 +35,29 @@ print("On frame press: q = quit, r = reset, s = save")
 while True:
     # grab the current frame
     frame = vs.read()
+
+    # draw black rectangle showing the field of view used during catching
+    cv2.line(frame, (86,100 ), (86, 380), (0, 0, 0), 1)
+    cv2.line(frame, (86,100 ), (554, 100), (0, 0, 0), 1)
+    cv2.line(frame, (86,380 ), (554, 380), (0, 0, 0), 1)
+    cv2.line(frame, (554,100 ), (554, 380), (0, 0, 0), 1)
+
     for point in clicks:
         cv2.circle(frame, (point[0], point[1]), 3, (255, 0, 0), -1)
     
     if len(clicks) > 3:
+        # draw green lines outlining catch zone
         cv2.line(frame, (clicks[0][0], clicks[0][1]), (clicks[1][0], clicks[1][1]), (0, 255, 0), 1)
         cv2.line(frame, (clicks[0][0], clicks[0][1]), (clicks[2][0], clicks[2][1]), (0, 255, 0), 1)
         cv2.line(frame, (clicks[2][0], clicks[2][1]), (clicks[3][0], clicks[3][1]), (0, 255, 0), 1)
         cv2.line(frame, (clicks[1][0], clicks[1][1]), (clicks[3][0], clicks[3][1]), (0, 255, 0), 1)
-    
+
+        # blue lines indicating centre
         cv2.line(frame, (int((clicks[0][0]+clicks[2][0])/2), 0), (int((clicks[0][0]+clicks[2][0])/2), 480), (255, 0, 0), 1)
         cv2.line(frame, (0, int((clicks[0][1]+clicks[1][1])/2)), (640, int((clicks[0][1]+clicks[1][1])/2)), (255, 0, 0), 1)
     
     if len(clicks) == 4:
-        cv2.line(frame, (mx, 0), (mx, 480), (0, 0, 255), 1) # vertical line
+        cv2.line(frame, (mx, 0), (mx, 480), (0, 0, 255), 1) # vertical line for motion ignore zone
     if len(clicks) >= 5:
         cv2.line(frame, (clicks[4][0], 0), (clicks[4][0], 480), (0, 255, 0), 1)   
         
@@ -58,9 +67,12 @@ while True:
     if k == ord("q"):
             break
     if k == ord("s") and len(clicks) == 5:
-            
+            # write points out to text file for use with catching program
+            # before saving them, convert to pixel coordinates of other field of view
             with open('calibration_values.txt', 'w') as calib_file:
                 for point in clicks:
+                    point[0] = round((point[0] - 86)*0.6837)
+                    point[1] = round((point[1] - 100)*0.6857)
                     calib_file.write(str(point[0]) + "," + str(point[1]) + ",")
             print("Saved")
             break
